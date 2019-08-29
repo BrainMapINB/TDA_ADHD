@@ -28,10 +28,11 @@ if(gz_n == 0) stop("No .tar.gz files found!!")
 
 # Uncompress files
 if(!dir.exists(out_dir)) dir.create(path = out_dir, recursive = T)
-#for(ii in gz_ls) untar(tarfile = ii, exdir = out_dir)
+for(ii in gz_ls) untar(tarfile = ii, exdir = out_dir)
 
 # List every resting file
 res_ls <- list.files(path = out_dir, pattern = "rest.nii.gz", full.names = T, recursive = T)
+res_ls <- res_ls[grep(pattern = "rest_1", res_ls)]
 # Generate the corresponding T1w filepaths
 t1_ls <- file.path(dirname(dirname(res_ls)),"anat_1")
 for(ii in 1:length(t1_ls)) if(length(dir(t1_ls[ii])) == 1) t1_ls[ii] <- file.path(t1_ls[ii],dir(t1_ls[ii]))
@@ -50,17 +51,13 @@ if(length(no_pp) > 0){
   if(!dir.exists(log_dir)) dir.create(log_dir)
   # Preprocessing script (bash)
   ppSAS <- file.path(getwd(),"01-Preprocessing","ppSAS","ProcessConnRoiv2_INB_nihpd.sh")
-  # Launch preprocessing to cluster
+  # Launch preprocessing to cluster (it is highly recommended to parallelize this step)
   for(ii in no_pp){
     
     # Set command
-    cmd <- paste0("fsl_sub -l ",log_dir," -R 8 ",ppSAS,
-                  " ",res_ls[ii]," ",t1_ls[ii])
+    cmd <- paste0(ppSAS," ",res_ls[ii]," ",t1_ls[ii])
     # Send it
     system(cmd)
-    
-    # Wait a bit before send the next
-    #Sys.sleep(120)
     
   } 
   
