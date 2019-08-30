@@ -74,8 +74,6 @@ for(ii in 1:length(atlas)){
   df <- cbind(df, rips)
   
   # Write output
-  write.csv(df, file.path(out_dir, paste0("ADHD200_NYU_ppNIHPD_Rips_",atlas[ii],".csv")))
+  write.csv(df, file.path(smp_dir, paste0("ADHD200_NYU_ppNIHPD_Rips_",atlas[ii],".csv")))
   
 }
-
-
