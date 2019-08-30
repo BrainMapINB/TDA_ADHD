@@ -92,10 +92,10 @@ if(length(ts_ones) < pp_n){
   }
   library(fslr)
   # Atlas' filenames
-  atlas_AAL <- file.path(getwd(),"01-Preprocessing","Atlas","AAL","ROI_MNI_V4.nii")
-  atlas_CC200 <- file.path(getwd(),"01-Preprocessing","Atlas","CC200","ADHD200_parcellate_200_2mm.nii.gz")
-  atlas_P264 <- file.path(getwd(),"01-Preprocessing","Atlas","P264","power264_2mm.nii.gz")
-  atlas_CC400 <- file.path(getwd(),"01-Preprocessing","Atlas","CC400","ADHD200_parcellate_400_2mm.nii.gz")
+  atlas_AAL <- file.path(getwd(),"01-Preprocessing","atlas","AAL","ROI_MNI_V4.nii")
+  atlas_CC200 <- file.path(getwd(),"01-Preprocessing","atlas","CC200","ADHD200_parcellate_200_2mm.nii.gz")
+  atlas_P264 <- file.path(getwd(),"01-Preprocessing","atlas","P264","power264_2mm.nii.gz")
+  atlas_CC400 <- file.path(getwd(),"01-Preprocessing","atlas","CC400","ADHD200_parcellate_400_2mm.nii.gz")
   atlas <- c(atlas_AAL,atlas_CC200,atlas_P264,atlas_CC400)
   names(atlas) <- c("AAL","CC200","P264","CC400")
   
