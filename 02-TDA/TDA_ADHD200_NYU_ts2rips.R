@@ -56,9 +56,6 @@ if(length(rips_no) > 0){
 # Extract ID and fMRI scan number from Rips list
 id <- basename(dirname(dirname(dirname(dirname(dirname(rips_ls))))))
 rest <- basename(dirname(dirname(dirname(rips_ls))))
-# Set directory where sample info is going to be save (same as TDA_ADHD200_NYU_pp2atlas.R)
-smp_dir <- ""
-if(!dir.exists(out_dir)) dir.create(out_dir)
 # Get atlas labels
 atlas <- c("AAL","CC200","P264","CC400")
 for(ii in 1:length(atlas)){
@@ -74,6 +71,6 @@ for(ii in 1:length(atlas)){
   df <- cbind(df, rips)
   
   # Write output
-  write.csv(df, file.path(smp_dir, paste0("ADHD200_NYU_ppNIHPD_Rips_",atlas[ii],".csv")))
+  write.csv(df, file.path(getwd(),"02-TDA",paste0("ADHD200_NYU_ppNIHPD_Rips_",atlas[ii],".csv")))
   
 }
