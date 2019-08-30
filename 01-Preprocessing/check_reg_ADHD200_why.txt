@@ -1,0 +1,11 @@
+0010013_r1 - Bad deface
+0010061_r1 - Bad T1w quality
+0010111_r1 - (Very) high motion
+0021037_r1 - Bad coregistration
+0021043_r1 - Bad coregistration
+1567356_r1 - Bad coregistration
+2054438_r1 - Bad coregistration
+2136051_r1 - Bad coregistration
+2297413_r1 - Bad T1w quality
+3662296_r1 - Bad T1w quality
+8697774_r1 - Bad coregistration
