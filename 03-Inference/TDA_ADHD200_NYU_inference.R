@@ -798,24 +798,21 @@ library(scales)
 #sig_z <- res[net_n+sig_tri,1]
 # Draw links
 for(ii in sig_tri){
-  # Do not draw FDR corrected links
-  if(!is.element(ii,sig_fdr)){
-    # Set random position
-    p1 <- runif(1,-1,1)+c(-0.1,0.1); p2 <- runif(1,-1,1)+c(-0.1,0.1)
-    #p1 <- c(-0.1,0.1); p2 <- c(-0.1,0.1)
-    # Set color
-    t <- sig_mat[inter_comb[1,ii],inter_comb[2,ii]]
-    tp <- round(100*(t+1)/2)
-    tp_col <- rev(jet.colors(100))[tp]
-    # Draw link
-    circos.link(net_fac[inter_comb[1,ii]], p1,
-                net_fac[inter_comb[2,ii]], p2,
-                col = scales::alpha(tp_col,.8),
-                border = scales::alpha(tp_col,.5),
-                h.ratio=0.8)
-  }
+  # Set random position
+  p1 <- runif(1,-1,1)+c(-0.1,0.1); p2 <- runif(1,-1,1)+c(-0.1,0.1)
+  #p1 <- c(-0.1,0.1); p2 <- c(-0.1,0.1)
+  # Set color
+  t <- sig_mat[inter_comb[1,ii],inter_comb[2,ii]]
+  tp <- round(100*(t+1)/2)
+  tp_col <- rev(jet.colors(100))[tp]
+  # Draw link
+  circos.link(net_fac[inter_comb[1,ii]], p1,
+              net_fac[inter_comb[2,ii]], p2,
+              col = scales::alpha(tp_col,.8),
+              border = scales::alpha(tp_col,.5),
+              h.ratio=0.8)
 }
-# Draw intra-network above FDR corrected links
+# Draw intra-network above significant links
 for(ii in sig_diag){
   
   # Set corner positions
