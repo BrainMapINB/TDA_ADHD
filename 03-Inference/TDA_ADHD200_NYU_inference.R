@@ -249,7 +249,8 @@ res[12,] <- fit$coefficients[2:7,4]
 # Results
 signif(res,3)
 
-# Print results (AAL atlas)
+# Print results
+atlas <- c("AAL","CC200","P264","CC400")
 #pdf(file.path(res_dir,"grp_all_rips.pdf"),7,5)
 #svg(file.path(res_dir,"grp_all_rips.svg"),7,5)
 par(mfrow = c(2,2))
@@ -339,20 +340,25 @@ outfile <- file.path(res_dir,"grp_all_box.svg")
 #ggsave(outfile, plot = g5, device = "svg")
 
 # Compute edge-wise proportion test
-# Generate connectivity matrices
-cmx <- array(0, dim=c(116,116,nrow(datos)))
-# Set same directory as TDA_ADHD200_NYU_pp2atlas.R 'ppdir'
-pp_dir <- 
-for(ii in 1:nrow(datos)){
-  
-  # Read time series files
-  id <- as.character(datos$ID[ii])
-  if(nchar(id)==5) id <- paste0("00",id)
-  ts_file <- file.path(pp_dir,"NYU",id,"session_1",datos$Rest[ii],"rest.rsfMRIv2_nihpd","ts","pp_woGSR_AAL_ts.txt")
-  # Compute connectivity matrix
-  cmx[,,ii] <- cor(read.table(ts_file))
-  
+if(file.exists(file.path(getwd(),"03-Inference","CMX_AAL_3D.rds"))){
+  cmx <- readRDS(file.path(getwd(),"03-Inference","CMX_AAL_3D.rds"))
+} else{
+  # Generate connectivity matrices
+  cmx <- array(0, dim=c(116,116,nrow(datos)))
+  # Set same directory as TDA_ADHD200_NYU_pp2atlas.R 'ppdir'
+  pp_dir <- 
+    for(ii in 1:nrow(datos)){
+      
+      # Read time series files
+      id <- as.character(datos$ID[ii])
+      if(nchar(id)==5) id <- paste0("00",id)
+      ts_file <- file.path(pp_dir,"NYU",id,"session_1",datos$Rest[ii],"rest.rsfMRIv2_nihpd","ts","pp_woGSR_AAL_ts.txt")
+      # Compute connectivity matrix
+      cmx[,,ii] <- cor(read.table(ts_file))
+      
+    }
 }
+
 # Apply threshold
 cmx_dim <- dim(cmx)
 cmx_th <- array(as.integer(cmx>=0.65), cmx_dim)
@@ -439,7 +445,7 @@ for(hh in c(.5,.25,0)){
   #            quote = F, sep = "\t", row.names = F, col.names = F)
   
   # Create graph from adjacency matrix
-  ig <- graph.adjacency(res*(resP<0.001), mode="undirected", weighted=T)
+  ig <- graph.adjacency(res*(resP<0.01), mode="undirected", weighted=T)
   # A coord diagram
   ggraph(ig, layout = 'linear', circular = TRUE) + 
     theme_void() +
@@ -449,8 +455,8 @@ for(hh in c(.5,.25,0)){
     geom_node_point(aes(x = x*1.07, y=y*1.07, colour=aal$lob), shape = 19, size=5) +
     scale_color_manual(values=c("blue3","brown3","chartreuse4","chocolate2",
                                 "darkcyan","darkred","darkgoldenrod2"))
-  ggsave(file.path(res_dir,paste0("chord_prop",hh*100,"_sig001_AAL.svg")), device = "svg", width = 7.5, height = 6)
-  
+  ggsave(file.path(res_dir,paste0("chord_prop",hh*100,"_sig01_AAL.pdf")), device = "pdf", width = 7.5, height = 6)
+  #ggsave(file.path(res_dir,paste0("chord_prop",hh*100,"_sig001_AAL.svg")), device = "svg", width = 7.5, height = 6)
 }
 
 #------------------------------------------------------------------------------------------------------------------
@@ -861,7 +867,6 @@ for(ii in sig_tri) sig_mat[inter_comb[1,ii],inter_comb[2,ii]] <- log(res[ii+net_
 for(ii in sig_tri) sig_mat[inter_comb[2,ii],inter_comb[1,ii]] <- log(res[ii+net_n,1])
 rownames(sig_mat) <- net_lvl; colnames(sig_mat) <- net_lvl
 library(corrplot)
-#colorcito <- colorRampPalette(c("cyan","blue","white","white","white","white"))
 #pdf(file.path(res_dir,"cplot_P264_FN.pdf"),4,4)
 #svg(file.path(res_dir,"cplot_P264_FN.svg"),4,4)
 #par(mfrow=c(1,2))
