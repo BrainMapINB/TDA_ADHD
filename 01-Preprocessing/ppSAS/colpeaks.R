@@ -1,7 +1,6 @@
 #!/usr/bin/Rscript
 
-# Esta función genera una variable (columna) confusoria para cada pico de moviento,
-# dado un archivo con una columna de 0 (no-pico) y 1 (pico) para cada Tp.
+# This function generates a covariate column for each one in a vector.
 
 filename <- commandArgs(TRUE)
 a1=filename[1];
