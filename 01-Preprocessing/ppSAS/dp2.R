@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript
 
-# Esta función calcula las derivadas de las columnas, y el cuadrado de las columnas y las derivadas
-# uso: Rscript dp2.R input output
+# This function computes and adds the derivatives and quadratic terms to a given matrix
+# Use: Rscript dp2.R input output
 
 filename <- commandArgs(TRUE)
 a1=filename[1];
