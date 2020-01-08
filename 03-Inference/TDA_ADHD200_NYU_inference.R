@@ -64,15 +64,23 @@ fisher.test(t) # Odds Ratio and significance
 # Age
 describeBy(datos$Age, datos$grupo)
 t.test(Age~grupo, data=datos, var.equal = T)
+DF <- cbind(datos$Age,datos$grupo); colnames(DF) <- c("Age","grupo")
+cohen.d(DF,"grupo")$cohen.d
 # ADHD index
 describeBy(datos$ADHD.Index, datos$grupo)
 t.test(ADHD.Index~grupo, data=datos, var.equal = T)
+DF <- cbind(datos$ADHD.Index,datos$grupo); colnames(DF) <- c("adhd","grupo")
+cohen.d(DF,"grupo")$cohen.d
 # IQ
 describeBy(datos$Full4.IQ, datos$grupo)
 t.test(Full4.IQ~grupo, data=datos, var.equal = T)
+DF <- cbind(datos$Full4.IQ,datos$grupo); colnames(DF) <- c("iq","grupo")
+cohen.d(DF,"grupo")$cohen.d
 # Average RMS Relative Displacement
 describeBy(datos$AvgRelRMS, datos$grupo, digits = 4, mat = T)
 t.test(AvgRelRMS~grupo, data=datos, var.equal = T)
+DF <- cbind(datos$AvgRelRMS,datos$grupo); colnames(DF) <- c("adhd","grupo")
+cohen.d(DF,"grupo")$cohen.d
 
 #------------------------------------------------------------------------------------------------------------------
 # Kendall Concordance Coefficient (KCC) along parcellations
@@ -169,8 +177,8 @@ if(!is.element("corrplot",row.names(installed.packages()))){
 }
 library(corrplot)
 
-# Set a results directory in order to save images
-res_dir <- ""
+# Set a results directory in order to save images (change this path at your convenience)
+res_dir <- file.path(getwd(),"04-Results")
 if(!dir.exists(res_dir)) dir.create(res_dir)
 #pdf(file.path(res_dir,"KCC.pdf"),5,5)
 #svg(file.path(res_dir,"KCC.svg"),5,5)
@@ -201,35 +209,6 @@ par(op)
 ####################################################################################################################
 # Group inferences
 ####################################################################################################################
-#------------------------------------------------------------------------------------------------------------------
-# Groups comparison - single simplex filtration values
-#------------------------------------------------------------------------------------------------------------------
-
-# Read Rips filtrations for each participant
-fval <- matrix(0, nrow = 2, ncol = 4)
-atlas <- c("AAL","CC200","P264","CC400")
-for(ii in 1:length(atlas)){
-  
-  # Read file
-  filename <- file.path(getwd(),"02-TDA",paste0("ADHD200_NYU_ppNIHPD_Rips_",atlas[ii],".csv"))
-  rips <- read.csv(filename)
-  
-  # Match subjects
-  rips <- rips[match(datos$ID,rips$ID),]
-  
-  # Describe by group
-  show(db <- describeBy(rips$X1, datos$grupo, mat = T, digits = 4))
-  fval[,ii] <- db$mean
-  show(t.test(rips$X1 ~ datos$grupo, var.equal = T))
-  
-  # Compute Cohen's d
-  show(d <- (db$mean[1] - db$mean[2])/sd(rips$X1))
-  
-}
-colnames(fval) <- atlas
-rownames(fval) <- c("TDC", "ADHD")
-show(fval)
-
 #------------------------------------------------------------------------------------------------------------------
 # Groups comparison - logistic regression
 #------------------------------------------------------------------------------------------------------------------
@@ -315,12 +294,7 @@ for(ii in 1:length(atlas)){
   #legend("bottomleft", legend = c("ADHD","TDC"), col = c("red", "blue"), lty=1, cex=0.8)
   # Add dotted rectangle
   #rect(xleft = 0.3, xright = 0.4, ybottom = 9, ytop = 41, lty = 2)
-  # Add filtration value for betti0 equal to 1
-  # TDC
-  lines(x = c(fval[1,ii],fval[1,ii]), y = c(1, ncol(rips)/5), col = "blue", lwd = 2)
-  # ADHD
-  lines(x = c(fval[2,ii],fval[2,ii]), y = c(1, ncol(rips)/5), col = "red", lwd = 2)
-  
+
 }
   
 #dev.off()
@@ -364,20 +338,11 @@ g5 <- grid.arrange(g1, g2, g3, g4, nrow = 2, ncol=2)
 outfile <- file.path(res_dir,"grp_all_box.svg")
 #ggsave(outfile, plot = g5, device = "svg")
 
-# Add Cohen's d
-areaAVG <- describeBy(datos$areaAAL, datos$grupo)
-mu <- mean(datos$areaAAL[which(datos$grupo=="TDC")]) - mean(datos$areaAAL[which(datos$grupo=="ADHD")])
-pools <- sqrt(
-  (((sum(datos$grupo=="TDC")-1) * var(datos$areaAAL[which(datos$grupo=="TDC")])) +
-    (sum(datos$grupo=="ADHD")-1)*var(datos$areaAAL[which(datos$grupo=="ADHD")]))/
-    (length(datos$grupo)-2))
-d <- mu/pools
-
 # Compute edge-wise proportion test
 # Generate connectivity matrices
 cmx <- array(0, dim=c(116,116,nrow(datos)))
-# Set same directory as TDA_ADHD200_NYU_pp.R 'outdir'
-pp_dir <- ""
+# Set same directory as TDA_ADHD200_NYU_pp2atlas.R 'ppdir'
+pp_dir <- 
 for(ii in 1:nrow(datos)){
   
   # Read time series files
@@ -492,7 +457,7 @@ for(hh in c(.5,.25,0)){
 # Check lobular level - logistic regression
 #------------------------------------------------------------------------------------------------------------------
 
-# Standardzise variables
+# Standardize variables
 datos[,42:398] <- scale(datos[,42:398])
 
 # Abbreviation
@@ -500,34 +465,17 @@ lob_lvl <- c("Fr","Limb","Occ","Par","Sub","Temp","Cbl")
 lob_n <- length(lob_lvl)
 tda <- c("area","kurt","slop")
 
-# Logistic regression - Intra-modular
-# Create empty object to save every result
-res <- array(rep(rep(c(0,1,1),each=lob_n),3), dim=c(lob_n,9))
-rownames(res) <- lob_lvl
-colnames(res) <- c(paste0(c("z-","p-","pFDR-"),rep(c("area","kurt","slop"),each=3)))
-# Logistic model
-for(ii in 1:lob_n){
-  logformula <- paste0("grupo ~ area",lob_lvl[ii]," + kurt",lob_lvl[ii]," + slop",lob_lvl[ii],
-                       " + Sex + Age + AvgRelRMS")
-  fit <- summary(glm(as.formula(logformula),data = datos, family=binomial("logit")))
-  for(jj in 1:3){
-    coefpos <- which(rownames(fit$coefficients)==paste0(tda[jj],lob_lvl[ii]))
-    if(length(coefpos)==1) res[ii,c(jj*3-2,jj*3-1)] <- fit$coefficients[coefpos,3:4]
-  }
-}
-# Multiple comparison correction
-res[,c(3,6,9)] <- cbind(p.adjust(res[,2],"fdr"),
-                        p.adjust(res[,5],"fdr"),
-                        p.adjust(res[,8],"fdr"))
-
 # Logistic regression - Inter and inter module
 # Create pairwise combinations
 inter_comb <- combn(1:lob_n,2)
 lob_lvl_comb <- sapply(1:ncol(inter_comb), function(x) paste0(lob_lvl[inter_comb[1,x]],".",lob_lvl[inter_comb[2,x]]))
 lob_lvl_comb <- c(lob_lvl,lob_lvl_comb)
 lob_comb_n <- length(lob_lvl_comb)
-# Area
-res <- array(rep(rep(c(1,0,1,1),each=lob_comb_n),3), dim=c(lob_comb_n,12))
+# Create empty matrix in order to store results
+res <- array(rep(rep(c(1,0,1,1),each=lob_comb_n),3), dim=c(lob_comb_n,4*length(tda)))
+# Row and column names
+rownames(res) <- lob_lvl_comb
+colnames(res) <- c(paste0(c("OR-","z-","p-","pNBS-"),rep(c("area","kurt","slop"),each=4)))
 # Logistic model
 for(ii in 1:lob_comb_n){
   logformula <- paste0("grupo ~ area",lob_lvl_comb[ii]," + kurt",lob_lvl_comb[ii],
@@ -540,57 +488,149 @@ for(ii in 1:lob_comb_n){
   }
 }
 # Compute odds ratio
-res[,c(1,5,9)] <- exp(res[,c(1,5,9)])
+res[,4*(0:2)+1] <- exp(res[,4*(0:2)+1])
+
 # Multiple comparison correction
-res[,c(4,8,12)] <- cbind(p.adjust(res[,3],"fdr"),
-                         p.adjust(res[,7],"fdr"),
-                         p.adjust(res[,11],"fdr"))
-rownames(res) <- lob_lvl_comb
-colnames(res) <- c("area-OR","area-z","area-p","area-pFDR",
-                   "kurt-OR","kurt-z","kurt-p","kurt-pFDR",
-                   "slop-OR","slop-z","slop-p","slop-pFDR")
-#write.csv(res,file.path(res_dir,"logit_module.csv"))
+# Network-based statistics (NBS)
+# Define significant threshod (bi-sided)
+# (check multiple comparison only in area because is the only with more than one significant edge)
+zth <- abs(qnorm(0.025))
+sig_links <- which(abs(res[,2])>zth)
+mOBS <- matrix(0, nrow = lob_n, ncol = lob_n)
+if(length(sig_links)>0){
+  for(kk in sig_links){
+    if(kk <= lob_n){
+      mOBS[kk,kk] <- abs(res[kk,2])
+    } else{
+      mOBS[inter_comb[1,kk-lob_n],inter_comb[2,kk-lob_n]] <- abs(res[kk,2])
+      mOBS[inter_comb[2,kk-lob_n],inter_comb[1,kk-lob_n]] <- abs(res[kk,2])
+    }
+  }
+}
+# Load 'igraph' package to read .xlsx file
+if(!is.element("igraph",rownames(installed.packages()))){
+  install.packages("igraph")  
+}
+library(igraph)
+gOBS <- graph.adjacency(mOBS, mode = "undirected", weighted = T)
+# Permutate (nperm = 5000)
+nperm <- 10000
+# Empty objecto to store null distributions
+null_d <- matrix(0, nrow = nperm, ncol = 2)
+set.seed(18900217)
+for(pp in 1:nperm){
+  
+  # Every 100 print message
+  if((pp %% 100) == 0) cat(paste0(pp," "))
+  
+  # Create empty vector in order to store results
+  resPERM <- vector("numeric", lob_comb_n)
+  # Resample group labels
+  datos$grpPERM <- sample(datos$grupo)
+  # Logistic model
+  for(ii in 1:lob_comb_n){
+    logformula <- paste0("grpPERM ~ area",lob_lvl_comb[ii]," + kurt",lob_lvl_comb[ii],
+                         " + slop",lob_lvl_comb[ii],
+                         " + Sex + Age + AvgRelRMS")
+    fit <- summary(glm(as.formula(logformula),data = datos, family=binomial("logit")))
+    coefpos <- which(rownames(fit$coefficients)==paste0(tda[1],lob_lvl_comb[ii]))
+    if(length(coefpos)==1) resPERM[ii] <- fit$coefficients[coefpos,3]
+  }
+  # Eval graph components
+  sig_links <- which(abs(resPERM)>zth)
+  if(length(sig_links)>0){
+    mPERM <- matrix(0, nrow = lob_n, ncol = lob_n)
+    for(kk in sig_links){
+      if(kk <= lob_n){
+        mPERM[kk,kk] <- abs(resPERM[kk])-zth
+      } else{
+        mPERM[inter_comb[1,kk-lob_n],inter_comb[2,kk-lob_n]] <- abs(resPERM[kk])-zth
+        mPERM[inter_comb[2,kk-lob_n],inter_comb[1,kk-lob_n]] <- abs(resPERM[kk])-zth
+      }
+    }
+    # Generate igraph object
+    gPERM <- graph.adjacency(mPERM, mode = "undirected", weighted = T)
+    gPERM_comp <- components(gPERM)
+    maxPERM <- c(0,0)
+    # Find components bigger than one
+    if(sum(gPERM_comp$csize > 1)>0){
+      mPERM[lower.tri(mPERM)] <- 0
+      for(hh in 1:gPERM_comp$no){
+        if(gPERM_comp$csize[hh]>1){
+          sub_pos <- which(gPERM_comp$membership == hh)
+          sub_mPERM <- mPERM[sub_pos,sub_pos]
+          # Updated number of links maximum
+          if(sum(c(sub_mPERM>0))>maxPERM[1]) maxPERM[1] <- sum(c(sub_mPERM>0))
+          # Updated weighted number of links maximum
+          if(sum(c(sub_mPERM))>maxPERM[2]) maxPERM[2] <- sum(c(sub_mPERM))
+        } #if(gPERM_comp$csize[hh]>1)
+      } #for(hh in 1:gPERM_comp$no)
+      # Store maximum values
+      null_d[pp,] <- maxPERM
+    } #if(sum(gPERM_comp$csize > 1)>0)
+  } #if(length(sig_links)>0){
+}#for(pp in 1:nperm)
+
+# Compute FWE p-value for observed data
+gOBS_comp <- components(gOBS)
+# Find components bigger than one
+if(sum(gOBS_comp$csize > 1)>0){
+  mOBS[lower.tri(mOBS)] <- 0
+  maxOBS <- matrix(0, nrow = gOBS_comp$no, ncol = 4)
+  for(hh in 1:gOBS_comp$no){
+    if(gOBS_comp$csize[hh]>1){
+      sub_pos <- which(gOBS_comp$membership == hh)
+      sub_mOBS <- mOBS[sub_pos,sub_pos]
+      # Store number of links (and FWE p-value)
+      maxOBS[hh,1] <- sum(c(sub_mOBS>0))
+      maxOBS[hh,3] <- sum(null_d[,1] >= maxOBS[hh,1])/nperm
+      # Store weighted number of links
+      maxOBS[hh,2] <- sum(c(sub_mOBS))-zth*maxOBS[hh,1]
+      maxOBS[hh,4] <- sum(null_d[,2] >= maxOBS[hh,2])/nperm
+    } #if(gOBS_comp$csize[hh]>1)
+    # Find FWE significant links in the sub-matrix
+    comp_idx <- which(sub_mOBS>0, arr.ind = T)
+    # Realocate indices to the entire matrix
+    comp_idx[,1] <- sub_pos[comp_idx[,1]]
+    comp_idx[,2] <- sub_pos[comp_idx[,2]]
+    # Store FWE p-values
+    for(gg in 1:nrow(comp_idx)){
+      if(comp_idx[gg,1]==comp_idx[gg,2]){
+        res[comp_idx[gg,1],4] <- maxOBS[hh,4]
+      } else{
+        res[intersect(
+          which(inter_comb[1,]==comp_idx[gg,1]),
+          which(inter_comb[2,]==comp_idx[gg,2])
+        )+lob_n,4] <- maxOBS[hh,4]
+      }
+    } #for(gg in 1:length(comp_idx))
+  } #for(hh in 1:gOBS_comp$no)
+} #if(sum(gOBS_comp$csize > 1)>0)
+
 # Find significant rows
-sig_idx <- unique(which(res[,c(4,8,12)]<=0.05,arr.ind = T)[,1])
+sig_idx <- unique(which(res[,4*(1:3)]<=0.05,arr.ind = T)[,1])
 signif(res[sig_idx,],4)
 resL <- res
 
-# Plot significant intra and inter-module effects
+# Plot significant intra and inter-module effects (NBS corrected)
 sig_mat <- matrix(0,nrow = lob_n, ncol = lob_n)
-sig_diag <- which(res[1:lob_n,3]<=0.05)
+sig_diag <- which(res[1:lob_n,4]<=0.05)
 diag(sig_mat)[sig_diag] <- log(res[sig_diag,1])
-sig_tri <- which(res[-(1:lob_n),3]<=0.05)
+sig_tri <- which(res[-(1:lob_n),4]<=0.05)
 for(ii in sig_tri) sig_mat[inter_comb[1,ii],inter_comb[2,ii]] <- log(res[ii+lob_n,1])
 for(ii in sig_tri) sig_mat[inter_comb[2,ii],inter_comb[1,ii]] <- log(res[ii+lob_n,1])
 rownames(sig_mat) <- c("FRT", "LIMB", "OCC", "PAR", "SUB", "TEM", "CBL")
 colnames(sig_mat) <- c("FRT", "LIMB", "OCC", "PAR", "SUB", "TEM", "CBL")
-# Get FDR corrected
-sig_fdr <- matrix(1,nrow = lob_n, ncol = lob_n)
-sig_diag <- which(res[1:lob_n,4]<=0.05)
-diag(sig_fdr)[sig_diag] <- res[sig_diag,4]
-sig_tri <- which(res[-(1:lob_n),4]<=0.05)
-for(ii in sig_tri) sig_fdr[inter_comb[1,ii],inter_comb[2,ii]] <- res[ii+lob_n,4]
-for(ii in sig_tri) sig_fdr[inter_comb[2,ii],inter_comb[1,ii]] <- res[ii+lob_n,4]
-rownames(sig_fdr) <- lob_lvl; colnames(sig_fdr) <- lob_lvl
 
-par(op)
 # Corrplot
-# Load 'corrplot' package
-if(!is.element("corrplot",rownames(installed.packages()))){
-  install.packages("corrplot")  
-}
 library(corrplot)
-# Load 'matlab' package
-if(!is.element("matlab",rownames(installed.packages()))){
-  install.packages("matlab")  
-}
-library(matlab)
 #pdf(file.path(res_dir,"cplot_AAL_lob.pdf"),4,4)
 #svg(file.path(res_dir,"cplot_AAL_lob.svg"),4,4)
+library(matlab)
 corrplot(sig_mat, col=rev(jet.colors(100)),is.corr = F,type = "lower", tl.col = "black",
-         method = "square", cl.cex = 0.7, cl.lim = c(-1,0), mar=c(3,1,1,1)+0.1,
-         p.mat = 1-sig_fdr, insig = "pch", pch = "*", pch.col = "white")
-title(xlab = "log(odds ratio) (p < 0.05)")
+         method = "square", cl.cex = 0.7, cl.lim = c(-1,0), mar=c(3,1,1,1)+0.1)
+#p.mat = 1-sig_fdr, insig = "pch", pch = "*", pch.col = "white")
+title(xlab = "log(odds ratio) (pNBS < 0.05)")
 #dev.off()
 
 # Chord diagram of significant (uncorrected) intra and inter-module effects
@@ -604,6 +644,7 @@ library(circlize)
 net_fac <- as.factor(1:lob_n)
 levels(net_fac) <- c("FRONTAL","LIMBIC","OCCIPITAL","PARIETAL","SUBCORT","TEMPORAL","CEREBEL")
 # Initialize the plot.
+pdf(file.path(res_dir,"chord_AAL_lob.pdf"),4,4)
 #svg(file.path(res_dir,"chord_AAL_lob.svg"),4,4)
 par(mar = c(1, 1, 1, 1) )
 circos.clear()
@@ -618,38 +659,14 @@ circos.text(fac_pos,rep(0,lob_n),
             labels = levels(net_fac),
             facing = "bending.inside", cex=1.2)
 # Add a links between a point and another
-# Load 'scales' package
-if(!is.element("scales",rownames(installed.packages()))){
-  install.packages("scales")
-}
 library(scales)
-# Find significant (uncorrected) weigths
-sig_tri <- which(res[-(1:lob_n),3]<=0.05)
-sig_fdr <- which(res[-(1:lob_n),4]<=0.05)
+# Find significant (NBS corrected) weigths
+sig_tri <- which(res[-(1:lob_n),4]<=0.05)
+
 # Draw links
 for(ii in sig_tri){
-  # If uncorrected, do not draw borders
-  if(!is.element(ii,sig_fdr)){
-    # Set central position
-    p1 <- c(0.20,0.5); p2 <- c(-0.5,-0.2)
-    # Set color
-    t <- sig_mat[inter_comb[1,ii],inter_comb[2,ii]]
-    tp <- round(100*(t+1)/2)
-    tp_col <- rev(jet.colors(100))[tp]
-    # Draw link
-    circos.link(net_fac[inter_comb[1,ii]], p1,
-                net_fac[inter_comb[2,ii]], p2,
-                col = scales::alpha(tp_col,.9), border = scales::alpha(tp_col,.4),
-                h.ratio=0.8)
-  }
-}
-# Draw above FDR corrected links
-for(ii in sig_fdr){
-
-  # Set random position
-  p1 <- runif(1,-0.9,0.9)+c(-0.15,0.15)#; p2 <- runif(1,-0.9,0.9)+c(-0.15,0.15)
-  p2 <- c(-0.15,0.15)
-  #p1 <- c(-0.25,0.25); p2 <- c(-0.25,0.25)
+  # Set central position
+  p1 <- c(0.20,0.5); p2 <- c(-0.5,-0.2)
   # Set color
   t <- sig_mat[inter_comb[1,ii],inter_comb[2,ii]]
   tp <- round(100*(t+1)/2)
@@ -657,13 +674,11 @@ for(ii in sig_fdr){
   # Draw link
   circos.link(net_fac[inter_comb[1,ii]], p1,
               net_fac[inter_comb[2,ii]], p2,
-              col = tp_col,
-              #border = "magenta",
-              lwd = 2,
+              col = scales::alpha(tp_col,.9), border = scales::alpha(tp_col,.4),
               h.ratio=0.8)
-  
 }
-# Draw intra-network above FDR corrected links
+
+# Draw intra-network above NBS corrected links
 for(ii in sig_diag){
   
   # Set corner positions
@@ -681,7 +696,7 @@ for(ii in sig_diag){
               h.ratio=0.8)
   
 }
-#dev.off()
+dev.off()
 # Clear cicle parameters
 circos.clear()
 par(op)
@@ -695,36 +710,17 @@ net_lvl <- c("AUD","CBL","CinOp","DMN","DAN","FPN","MEM","SAL","SMN.H","SMN.M","
 net_n <- length(net_lvl)
 tda <- c("area","kurt","slop")
 
-# Logistic regression - Intra-modular
-# Create empty object to save every result
-res <- array(rep(rep(c(1,0,1,1),each=net_n),3), dim=c(net_n,12))
-rownames(res) <- net_lvl
-colnames(res) <- c(paste0(c("OR-","z-","p-","pFDR-"),rep(c("area","kurt","slop"),each=4)))
-# Logistic model
-for(ii in 1:net_n){
-  logformula <- paste0("grupo ~ area",net_lvl[ii]," + kurt",net_lvl[ii]," + slop",net_lvl[ii],
-                       " + Sex + Age + AvgRelRMS")
-  fit <- summary(glm(as.formula(logformula),data = datos, family=binomial("logit")))
-  for(jj in 1:3){
-    coefpos <- which(rownames(fit$coefficients)==paste0(tda[jj],net_lvl[ii]))
-    if(length(coefpos)==1) res[ii,(jj*4-3):(jj*4-1)] <- fit$coefficients[coefpos,c(1,3:4)]
-  }
-}
-# Compute odds ratio
-res[,c(1,5,9)] <- exp(res[,c(1,5,9)])
-# Multiple comparison correction
-res[,c(4,8,12)] <- cbind(p.adjust(res[,3],"fdr"),
-                        p.adjust(res[,7],"fdr"),
-                        p.adjust(res[,11],"fdr"))
-
 # Logistic regression - Inter and inter module
 # Create pairwise combinations
 inter_comb <- combn(1:net_n,2)
 net_lvl_comb <- sapply(1:ncol(inter_comb), function(x) paste0(net_lvl[inter_comb[1,x]],".",net_lvl[inter_comb[2,x]]))
 net_lvl_comb <- c(net_lvl,net_lvl_comb)
 net_comb_n <- length(net_lvl_comb)
-# Area
-res <- array(rep(rep(c(1,0,1,1),each=net_comb_n),3), dim=c(net_comb_n,12))
+# Create empty matrix in order to store results
+res <- array(rep(rep(c(1,0,1,1),each=net_comb_n),3), dim=c(net_comb_n,4*length(tda)))
+# Row and column names
+rownames(res) <- net_lvl_comb
+colnames(res) <- c(paste0(c("OR-","z-","p-","pNBS-"), rep(c("area","kurt","slop"),each=4)))
 # Logistic model
 for(ii in 1:net_comb_n){
   logformula <- paste0("grupo ~ area",net_lvl_comb[ii]," + kurt",net_lvl_comb[ii],
@@ -737,28 +733,130 @@ for(ii in 1:net_comb_n){
   }
 }
 # Compute odds ratio
-res[,c(1,5,9)] <- exp(res[,c(1,5,9)])
+res[,4*(0:2)+1] <- exp(res[,4*(0:2)+1])
+
 # Multiple comparison correction
-res[,c(4,8,12)] <- cbind(p.adjust(res[,3],"fdr"),
-                         p.adjust(res[,7],"fdr"),
-                         p.adjust(res[,11],"fdr"))
-rownames(res) <- net_lvl_comb
-colnames(res) <- c("area-OR","area-z","area-p","area-pFDR",
-                   "kurt-OR","kurt-z","kurt-p","kurt-pFDR",
-                   "slop-OR","slop-z","slop-p","slop-pFDR")
-#write.csv(res, file.path(res_dir,"logit_module.csv"))
-# Find significant rows
-#sig_idx <- unique(which(res[,c(4,8,12)]<=0.05,arr.ind = T)[,1]) #FDR
-sig_idx <- unique(which(res[,c(3,8,12)]<=0.05,arr.ind = T)[,1]) #uncorr
+# Network-based statistics (NBS)
+# Define significant threshod (bi-sided)
+zth <- abs(qnorm(0.025))
+sig_links <- which(abs(res[,2])>zth)
+mOBS <- matrix(0, nrow = net_n, ncol = net_n)
+if(length(sig_links)>0){
+  for(kk in sig_links){
+    if(kk <= net_n){
+      mOBS[kk,kk] <- abs(res[kk,2])
+    } else{
+      mOBS[inter_comb[1,kk-net_n],inter_comb[2,kk-net_n]] <- abs(res[kk,2])
+      mOBS[inter_comb[2,kk-net_n],inter_comb[1,kk-net_n]] <- abs(res[kk,2])
+    }
+  }
+}
+# Generate igraph object
+gOBS <- graph.adjacency(mOBS, mode = "undirected", weighted = T)
+# Permutate (nperm = 10000)
+nperm <- 10000
+# Empty objecto to store null distributions
+null_d <- matrix(0, nrow = nperm, ncol = 2)
+for(pp in 1:nperm){
+  
+  # Every 100 print message
+  if((pp %% 100) == 0) cat(paste0(pp," "))
+  
+  # Create empty vector in order to store results
+  resPERM <- vector("numeric", net_comb_n)
+  # Resample group labels
+  datos$grpPERM <- sample(datos$grupo)
+  # Logistic model
+  for(ii in 1:net_comb_n){
+    logformula <- paste0("grpPERM ~ area",net_lvl_comb[ii]," + kurt",net_lvl_comb[ii],
+                         " + slop",net_lvl_comb[ii],
+                         " + Sex + Age + AvgRelRMS")
+    fit <- summary(glm(as.formula(logformula),data = datos, family=binomial("logit")))
+    coefpos <- which(rownames(fit$coefficients)==paste0(tda[1],net_lvl_comb[ii]))
+    if(length(coefpos)==1) resPERM[ii] <- fit$coefficients[coefpos,3]
+  }
+  # Eval graph components
+  sig_links <- which(abs(resPERM)>zth)
+  if(length(sig_links)>0){
+    mPERM <- matrix(0, nrow = net_n, ncol = net_n)
+    for(kk in sig_links){
+      if(kk <= net_n){
+        mPERM[kk,kk] <- abs(resPERM[kk])-zth
+      } else{
+        mPERM[inter_comb[1,kk-net_n],inter_comb[2,kk-net_n]] <- abs(resPERM[kk])-zth
+        mPERM[inter_comb[2,kk-net_n],inter_comb[1,kk-net_n]] <- abs(resPERM[kk])-zth
+      }
+    }
+    # Generate igraph object
+    gPERM <- graph.adjacency(mPERM, mode = "undirected", weighted = T)
+    gPERM_comp <- components(gPERM)
+    maxPERM <- c(0,0)
+    # Find components bigger than one
+    if(sum(gPERM_comp$csize > 1)>0){
+      mPERM[lower.tri(mPERM)] <- 0
+      for(hh in 1:gPERM_comp$no){
+        if(gPERM_comp$csize[hh]>1){
+          sub_pos <- which(gPERM_comp$membership == hh)
+          sub_mPERM <- mPERM[sub_pos,sub_pos]
+          # Updated number of links maximum
+          if(sum(c(sub_mPERM>0))>maxPERM[1]) maxPERM[1] <- sum(c(sub_mPERM>0))
+          # Updated weighted number of links maximum
+          if(sum(c(sub_mPERM))>maxPERM[2]) maxPERM[2] <- sum(c(sub_mPERM))
+        } #if(gPERM_comp$csize[hh]>1)
+      } #for(hh in 1:gPERM_comp$no)
+      # Store maximum values
+      null_d[pp,] <- maxPERM
+    } #if(sum(gPERM_comp$csize > 1)>0)
+  } #if(length(sig_links)>0){
+}#for(pp in 1:nperm)
+
+# Compute FWE p-value for observed data
+gOBS_comp <- components(gOBS)
+# Find components bigger than one
+if(sum(gOBS_comp$csize > 1)>0){
+  mOBS[lower.tri(mOBS)] <- 0
+  maxOBS <- matrix(0, nrow = gOBS_comp$no, ncol = 4)
+  for(hh in 1:gOBS_comp$no){
+    if(gOBS_comp$csize[hh]>1){
+      sub_pos <- which(gOBS_comp$membership == hh)
+      sub_mOBS <- mOBS[sub_pos,sub_pos]
+      # Store number of links (and FWE p-value)
+      maxOBS[hh,1] <- sum(c(sub_mOBS>0))
+      maxOBS[hh,3] <- sum(null_d[,1] >= maxOBS[hh,1])/nperm
+      # Store weighted number of links
+      maxOBS[hh,2] <- sum(c(sub_mOBS))-zth*maxOBS[hh,1]
+      maxOBS[hh,4] <- sum(null_d[,2] >= maxOBS[hh,2])/nperm
+    } #if(gOBS_comp$csize[hh]>1)
+    # Find FWE significant links in the sub-matrix
+    comp_idx <- which(sub_mOBS>0, arr.ind = T)
+    # Realocate indices to the entire matrix
+    comp_idx[,1] <- sub_pos[comp_idx[,1]]
+    comp_idx[,2] <- sub_pos[comp_idx[,2]]
+    # Store FWE p-values
+    for(gg in 1:nrow(comp_idx)){
+      if(comp_idx[gg,1]==comp_idx[gg,2]){
+        res[comp_idx[gg,1],4] <- maxOBS[hh,4]
+      } else{
+        res[intersect(
+          which(inter_comb[1,]==comp_idx[gg,1]),
+          which(inter_comb[2,]==comp_idx[gg,2])
+        )+net_n,4] <- maxOBS[hh,4]
+      }
+    } #for(gg in 1:length(comp_idx))
+  } #for(hh in 1:gOBS_comp$no)
+} #if(sum(gOBS_comp$csize > 1)>0)
+
+# Find significant rows (NBS corrected)
+sig_idx <- unique(which(res[,4*(1:3)]<=0.05,arr.ind = T)[,1])
 signif(res[sig_idx,],4)
 resP <- res
 
 # Display results
-# Plot significant (uncorrected) intra and inter-module effects
+# Plot significant (NBS corrected) intra and inter-module effects
 sig_mat <- matrix(0,nrow = net_n, ncol = net_n)
-sig_diag <- which(res[1:net_n,3]<=0.05)
+sig_diag <- which(res[1:net_n,4]<=0.05)
 diag(sig_mat)[sig_diag] <- log(res[sig_diag,1])
-sig_tri <- which(res[-(1:net_n),3]<=0.05)
+sig_tri <- which(res[-(1:net_n),4]<=0.05)
 for(ii in sig_tri) sig_mat[inter_comb[1,ii],inter_comb[2,ii]] <- log(res[ii+net_n,1])
 for(ii in sig_tri) sig_mat[inter_comb[2,ii],inter_comb[1,ii]] <- log(res[ii+net_n,1])
 rownames(sig_mat) <- net_lvl; colnames(sig_mat) <- net_lvl
@@ -770,10 +868,10 @@ library(corrplot)
 library(matlab)
 corrplot(sig_mat, col=rev(jet.colors(100)),is.corr = F,type = "lower", tl.col = "black",
          method = "square", cl.cex = 0.7, cl.lim = c(-1,0), mar=c(3,1,1,1)+0.1)
-title(xlab = "log(OR) (p < 0.05; uncorr.)")
+title(xlab = "log(OR) (p < 0.05; NBS-FWE)")
 #dev.off()
 
-# Chord diagram of significant (uncorrected) intra and inter-module effects
+# Chord diagram of significant (NBS corrected) intra and inter-module effects
 # Load 'circlize' package
 # Create network factor
 net_fac <- as.factor(1:net_n)
@@ -812,7 +910,7 @@ for(ii in sig_tri){
               border = scales::alpha(tp_col,.5),
               h.ratio=0.8)
 }
-# Draw intra-network above significant links
+# Draw intra-network uncorrected links
 for(ii in sig_diag){
   
   # Set corner positions
