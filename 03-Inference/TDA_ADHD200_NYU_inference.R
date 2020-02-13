@@ -92,84 +92,93 @@ if(!is.element("irr",row.names(installed.packages()))){
 }
 library(irr)
 
+# Create empty object to store observed results
+nperm <- 10000
+kccRES <- matrix(0, nrow = nperm+1, ncol = 21)
+atlas_labs <- c("AAL","CC200","P264","CC400")
+atlas_comb <- combn(1:length(atlas_labs),2)
+colnames(kccRES) <- paste0(rep(c("area.","kurt.","slop."),each=7),
+                           c("4",sapply(1:ncol(atlas_comb),function(x) paste0(atlas_labs[atlas_comb[1,x]],".",atlas_labs[atlas_comb[2,x]]))))
+
 # Betti0-AREA
 # All atlases together
-icc(cbind(scale(datos$areaAAL),scale(datos$areaCC200),scale(datos$areaP264),scale(datos$areaCC400)))
-kendall(cbind(datos$areaAAL,datos$areaCC200,datos$areaP264,datos$areaCC400))
+(k <- kendall(cbind(datos$areaAAL,datos$areaCC200,datos$areaP264,datos$areaCC400)))
+kccRES[1,1] <- k$value
 
 # Pairwise
 area_kcc <- array(0,dim=c(4,4))
 # AAL-CC200
 (k <- kendall(cbind(datos$areaAAL,datos$areaCC200)))
-area_kcc[1,2] <- k$value
+area_kcc[1,2] <- kccRES[1,2] <- k$value
 # AAL-P264
 (k <- kendall(cbind(datos$areaAAL,datos$areaP264)))
-area_kcc[1,3] <- k$value
+area_kcc[1,3] <- kccRES[1,3] <- k$value
 # AAL-CC400
 (k <- kendall(cbind(datos$areaAAL,datos$areaCC400)))
-area_kcc[1,4] <- k$value
+area_kcc[1,4] <- kccRES[1,4] <- k$value
 # CC200-P264
 (k <- kendall(cbind(datos$areaCC200,datos$areaP264)))
-area_kcc[2,3] <- k$value
+area_kcc[2,3] <- kccRES[1,5] <- k$value
 # CC200-CC400
 (k <- kendall(cbind(datos$areaCC200,datos$areaCC400)))
-area_kcc[2,4] <- k$value
+area_kcc[2,4] <- kccRES[1,6] <- k$value
 # P264-CC400
 (k <- kendall(cbind(datos$areaP264,datos$areaCC400)))
-area_kcc[3,4] <- k$value
+area_kcc[3,4] <- kccRES[1,7] <- k$value
 
 # Betti0-KURTOSIS
 # All atlases together
-icc(cbind(scale(datos$kurtAAL),scale(datos$kurtCC200),scale(datos$kurtP264),scale(datos$kurtCC400)))
-kendall(cbind(datos$kurtAAL,datos$kurtCC200,datos$kurtP264,datos$kurtCC400))
+(k <- kendall(cbind(datos$kurtAAL,datos$kurtCC200,datos$kurtP264,datos$kurtCC400)))
+kccRES[1,8] <- k$value
 
 # Pairwise
 kurt_kcc <- array(0,dim=c(4,4))
 # AAL-CC200
 (k <- kendall(cbind(datos$kurtAAL,datos$kurtCC200)))
-kurt_kcc[1,2] <- k$value
+kurt_kcc[1,2] <- kccRES[1,9] <- k$value
 # AAL-P264
 (k <- kendall(cbind(datos$kurtAAL,datos$kurtP264)))
-kurt_kcc[1,3] <- k$value
+kurt_kcc[1,3] <- kccRES[1,10] <- k$value
 # AAL-CC400
 (k <- kendall(cbind(datos$kurtAAL,datos$kurtCC400)))
-kurt_kcc[1,4] <- k$value
+kurt_kcc[1,4] <- kccRES[1,11] <- k$value
 # CC200-P264
 (k <- kendall(cbind(datos$kurtCC200,datos$kurtP264)))
-kurt_kcc[2,3] <- k$value
+kurt_kcc[2,3] <- kccRES[1,12] <- k$value
 # CC200-CC400
 (k <- kendall(cbind(datos$kurtCC200,datos$kurtCC400)))
-kurt_kcc[2,4] <- k$value
+kurt_kcc[2,4] <- kccRES[1,13] <- k$value
 # P264-CC400
 (k <- kendall(cbind(datos$kurtP264,datos$kurtCC400)))
-kurt_kcc[3,4] <- k$value
+kurt_kcc[3,4] <- kccRES[1,14] <- k$value
 
 # Betti0-Slope
 # All atlases together
-icc(cbind(scale(datos$slopAAL),scale(datos$slopCC200),scale(datos$slopP264),scale(datos$slopCC400)))
-kendall(cbind(datos$slopAAL,datos$slopCC200,datos$slopP264,datos$slopCC400))
+k <- (kendall(cbind(datos$slopAAL,datos$slopCC200,datos$slopP264,datos$slopCC400)))
+kccRES[1,15] <- k$value
 
 # Pairwise
 slop_kcc <- array(0,dim=c(4,4))
 # AAL-CC200
 (k <- kendall(cbind(datos$slopAAL,datos$slopCC200)))
-slop_kcc[1,2] <- k$value
+slop_kcc[1,2] <- kccRES[1,16] <- k$value
 # AAL-P264
 (k <- kendall(cbind(datos$slopAAL,datos$slopP264)))
-slop_kcc[1,3] <- k$value
+slop_kcc[1,3] <- kccRES[1,17] <- k$value
 # AAL-CC400
 (k <- kendall(cbind(datos$slopAAL,datos$slopCC400)))
-slop_kcc[1,4] <- k$value
+slop_kcc[1,4] <- kccRES[1,18] <- k$value
 # CC200-P264
 (k <- kendall(cbind(datos$slopCC200,datos$slopP264)))
-slop_kcc[2,3] <- k$value
+slop_kcc[2,3] <- kccRES[1,19] <- k$value
 # CC200-CC400
 (k <- kendall(cbind(datos$slopCC200,datos$slopCC400)))
-slop_kcc[2,4] <- k$value
+slop_kcc[2,4] <- kccRES[1,20] <- k$value
 # P264-CC400
 (k <- kendall(cbind(datos$slopP264,datos$slopCC400)))
-slop_kcc[3,4] <- k$value
+slop_kcc[3,4] <- kccRES[1,21] <- k$value
 
+#------------------------------------------------------------------------------------------------------------------
 # Plot results
 # Load 'corrplot' package
 if(!is.element("corrplot",row.names(installed.packages()))){
@@ -205,6 +214,82 @@ corrplot(slop_kcc,method = "square", type = "upper", diag=F, mar=c(2,0,2,0),
 # Save plot
 #dev.off()
 par(op)
+
+#------------------------------------------------------------------------------------------------------------------
+# Kendall Concordance Coefficient (KCC) along parcellations
+
+# Load 'parallel' library
+library(parallel)
+set.seed(18900217)
+
+# Set variables of interest
+datPERM <- datos[,match(paste0(rep(c("area","kurt","slop"),4),rep(atlas_labs,each=3)),names(datos))]
+# Set agreement combinations by columns names
+collist <- vector("list",21)
+# Column numbers for AUC
+collist[[1]] <- c(1,4,7,10)
+collist[[2]] <- c(1,4)
+collist[[3]] <- c(1,7)
+collist[[4]] <- c(1,10)
+collist[[5]] <- c(4,7)
+collist[[6]] <- c(4,10)
+collist[[7]] <- c(7,10)
+# Column numbers for Kurtosis and Slope
+for(ii in 8:21) collist[[ii]] <- collist[[ii-7]]+1
+
+# Set cluster
+cl <- makeCluster(detectCores())
+clusterExport(cl=cl,
+              varlist=c("datPERM", "kendall", "collist"),
+              envir=environment())
+kccRES[2:(nperm+1),] <- t(parSapply(cl,1:nperm, function(x){
+  # Permute variables
+  datPERM <- apply(datPERM, 2, sample)
+  # Calculate KCC
+  sapply(1:21, function(x) kendall(datPERM[,collist[[x]]])$value)
+}))
+stopCluster(cl)
+
+
+####################################################################################################################
+# Null models
+####################################################################################################################
+
+# Get results from permutated data in 'perm_dir'
+perm_dir <- file.path(getwd(),"02-TDA","PERM")
+
+# Plot Betti0 curves along permutated data
+#svg(file.path(res_dir,"all_permRips.svg"),7,5)
+#pdf(file.path(res_dir,"all_permRips.pdf"),7,5)
+par(mfrow = c(2,2))
+for(aa in 1:length(atlas_labs)){
+  
+  # Read observed data
+  rips_smp <- read.csv(paste0(perm_dir,"/Rips_",atlas_labs[aa],"_AvgCI.csv"), header = F, row.names = 1)
+  rips_smp$N <- 0
+  plot(unlist(rips_smp[1,]),1:ncol(rips_smp), type = "l", las = 1, axes = F,
+       xlim = c(0,0.6), xlab = "Filtration value", ylab = "B0", main = atlas_labs[aa])
+  axis(side = 1, lwd = 2)
+  axis(side = 2, lwd = 2, las = 1)
+  # Add CI
+  lines(unlist(rips_smp[2,]),1:ncol(rips_smp), lty = 1)
+  lines(unlist(rips_smp[3,]),1:ncol(rips_smp), lty = 1)
+  
+  # Unconstrain null model
+  lines(unlist(rips_smp[4,]), 1:ncol(rips_smp), col = "darkolivegreen")
+  lines(unlist(rips_smp[5,]), 1:ncol(rips_smp), col = "darkolivegreen", lty = 1)
+  lines(unlist(rips_smp[6,]), 1:ncol(rips_smp), col = "darkolivegreen", lty = 1)
+  
+  # Constrain null model
+  lines(unlist(rips_smp[7,]), 1:ncol(rips_smp), col = "darkgoldenrod")
+  lines(unlist(rips_smp[8,]), 1:ncol(rips_smp), col = "darkgoldenrod", lty = 1)
+  lines(unlist(rips_smp[9,]), 1:ncol(rips_smp), col = "darkgoldenrod", lty = 1)
+  
+  # Add one legend
+  if(aa == 4) legend("topright", legend = c("Obs.","Null-C","Null-U"), col = c("black", "darkgoldenrod", "darkolivegreen"), lty = 1, lwd = 2)
+}
+#dev.off()
+
 
 ####################################################################################################################
 # Group inferences
@@ -276,7 +361,18 @@ for(ii in 1:length(atlas)){
   axis(side = 2, lwd = 2, las = 1)
   # Draw c.i. light lines
   colorcito <- c("blue", "red")
-  # Draw group means and dashed confidence intervals
+  # Draw group means
+  lines(ripsAVG$mean[which(ripsAVG$group1=="ADHD")], y, col="red", lwd=1.5)
+  lines(ripsAVG$mean[which(ripsAVG$group1=="TDC")], y, col="blue", lwd=1.5)
+  # Bootstrap CI
+  bootCI <- sapply(1:1000, function(x) {
+    boot_idx <- sample(1:ncol(datos), replace = T)
+    describeBy(rips[boot_idx,], datos$grupo[boot_idx], mat = T)$mean
+  })
+  
+  apply(bootCI,2,quantile,0.025)
+  apply(bootCI,2,quantile,0.975)
+  
   # ADHD
   mADHD <- ripsAVG$mean[which(ripsAVG$group1=="ADHD")]
   ciADHD <- ripsAVG$se[which(ripsAVG$group1=="ADHD")]*1.96
@@ -519,7 +615,7 @@ if(!is.element("igraph",rownames(installed.packages()))){
 }
 library(igraph)
 gOBS <- graph.adjacency(mOBS, mode = "undirected", weighted = T)
-# Permutate (nperm = 5000)
+# Permutate (nperm = 10000)
 nperm <- 10000
 # Empty objecto to store null distributions
 null_d <- matrix(0, nrow = nperm, ncol = 2)
@@ -593,6 +689,16 @@ if(sum(gOBS_comp$csize > 1)>0){
       # Store weighted number of links
       maxOBS[hh,2] <- sum(c(sub_mOBS))-zth*maxOBS[hh,1]
       maxOBS[hh,4] <- sum(null_d[,2] >= maxOBS[hh,2])/nperm
+      # Plot p-value stability
+      pval_est <- cumsum(null_d[,2] >= maxOBS[hh,2])/(1:nperm)
+      plot(pval_est, type="l", ylim = c(0,0.06), las = 1,
+           xlab = "Permutation index", ylab = "p-value",
+           main = paste0("Permuted p-value ",signif(maxOBS[hh,4],3)))
+      abline(h=0.05, col="red", lty=2)
+      # Marginal error
+      pval_me <- 2*sqrt(pval_est*(1-pval_est)/1:nperm)
+      lines(pval_est+pval_me, col = "chartreuse4")
+      lines(pval_est-pval_me, col = "chartreuse4")
     } #if(gOBS_comp$csize[hh]>1)
     # Find FWE significant links in the sub-matrix
     comp_idx <- which(sub_mOBS>0, arr.ind = T)
@@ -616,7 +722,8 @@ if(sum(gOBS_comp$csize > 1)>0){
 # Find significant rows
 sig_idx <- unique(which(res[,4*(1:3)]<=0.05,arr.ind = T)[,1])
 signif(res[sig_idx,],4)
-resL <- res
+#resL <- res
+#null_dL <- null_d
 
 # Plot significant intra and inter-module effects (NBS corrected)
 sig_mat <- matrix(0,nrow = lob_n, ncol = lob_n)
@@ -832,6 +939,16 @@ if(sum(gOBS_comp$csize > 1)>0){
       # Store weighted number of links
       maxOBS[hh,2] <- sum(c(sub_mOBS))-zth*maxOBS[hh,1]
       maxOBS[hh,4] <- sum(null_d[,2] >= maxOBS[hh,2])/nperm
+      # Plot p-value stability
+      pval_est <- cumsum(null_d[,2] >= maxOBS[hh,2])/(1:nperm)
+      plot(pval_est, type="l", ylim = c(0,0.06), las = 1,
+           xlab = "Permutation index", ylab = "p-value",
+           main = paste0("Permuted p-value ",signif(maxOBS[hh,4],3)))
+      abline(h=0.05, col="red", lty=2)
+      # Marginal error
+      pval_me <- 2*sqrt(pval_est*(1-pval_est)/1:nperm)
+      lines(pval_est+pval_me, col = "chartreuse4")
+      lines(pval_est-pval_me, col = "chartreuse4")
     } #if(gOBS_comp$csize[hh]>1)
     # Find FWE significant links in the sub-matrix
     comp_idx <- which(sub_mOBS>0, arr.ind = T)
@@ -855,7 +972,8 @@ if(sum(gOBS_comp$csize > 1)>0){
 # Find significant rows (NBS corrected)
 sig_idx <- unique(which(res[,4*(1:3)]<=0.05,arr.ind = T)[,1])
 signif(res[sig_idx,],4)
-resP <- res
+#resP <- res
+#null_dN <- null_d
 
 # Display results
 # Plot significant (NBS corrected) intra and inter-module effects
