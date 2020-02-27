@@ -92,91 +92,78 @@ if(!is.element("irr",row.names(installed.packages()))){
 }
 library(irr)
 
-# Create empty object to store observed results
-nperm <- 10000
-kccRES <- matrix(0, nrow = nperm+1, ncol = 21)
-atlas_labs <- c("AAL","CC200","P264","CC400")
-atlas_comb <- combn(1:length(atlas_labs),2)
-colnames(kccRES) <- paste0(rep(c("area.","kurt.","slop."),each=7),
-                           c("4",sapply(1:ncol(atlas_comb),function(x) paste0(atlas_labs[atlas_comb[1,x]],".",atlas_labs[atlas_comb[2,x]]))))
-
+atlas <- c("AAL","CC200","P264","CC400")
 # Betti0-AREA
 # All atlases together
 (k <- kendall(cbind(datos$areaAAL,datos$areaCC200,datos$areaP264,datos$areaCC400)))
-kccRES[1,1] <- k$value
-
 # Pairwise
 area_kcc <- array(0,dim=c(4,4))
 # AAL-CC200
 (k <- kendall(cbind(datos$areaAAL,datos$areaCC200)))
-area_kcc[1,2] <- kccRES[1,2] <- k$value
+area_kcc[1,2] <- k$value
 # AAL-P264
 (k <- kendall(cbind(datos$areaAAL,datos$areaP264)))
-area_kcc[1,3] <- kccRES[1,3] <- k$value
+area_kcc[1,3] <- k$value
 # AAL-CC400
 (k <- kendall(cbind(datos$areaAAL,datos$areaCC400)))
-area_kcc[1,4] <- kccRES[1,4] <- k$value
+area_kcc[1,4] <- k$value
 # CC200-P264
 (k <- kendall(cbind(datos$areaCC200,datos$areaP264)))
-area_kcc[2,3] <- kccRES[1,5] <- k$value
+area_kcc[2,3] <- k$value
 # CC200-CC400
 (k <- kendall(cbind(datos$areaCC200,datos$areaCC400)))
-area_kcc[2,4] <- kccRES[1,6] <- k$value
+area_kcc[2,4] <- k$value
 # P264-CC400
 (k <- kendall(cbind(datos$areaP264,datos$areaCC400)))
-area_kcc[3,4] <- kccRES[1,7] <- k$value
+area_kcc[3,4] <- k$value
 
 # Betti0-KURTOSIS
 # All atlases together
 (k <- kendall(cbind(datos$kurtAAL,datos$kurtCC200,datos$kurtP264,datos$kurtCC400)))
-kccRES[1,8] <- k$value
-
 # Pairwise
 kurt_kcc <- array(0,dim=c(4,4))
 # AAL-CC200
 (k <- kendall(cbind(datos$kurtAAL,datos$kurtCC200)))
-kurt_kcc[1,2] <- kccRES[1,9] <- k$value
+kurt_kcc[1,2] <- k$value
 # AAL-P264
 (k <- kendall(cbind(datos$kurtAAL,datos$kurtP264)))
-kurt_kcc[1,3] <- kccRES[1,10] <- k$value
+kurt_kcc[1,3] <- k$value
 # AAL-CC400
 (k <- kendall(cbind(datos$kurtAAL,datos$kurtCC400)))
-kurt_kcc[1,4] <- kccRES[1,11] <- k$value
+kurt_kcc[1,4] <- k$value
 # CC200-P264
 (k <- kendall(cbind(datos$kurtCC200,datos$kurtP264)))
-kurt_kcc[2,3] <- kccRES[1,12] <- k$value
+kurt_kcc[2,3] <- k$value
 # CC200-CC400
 (k <- kendall(cbind(datos$kurtCC200,datos$kurtCC400)))
-kurt_kcc[2,4] <- kccRES[1,13] <- k$value
+kurt_kcc[2,4] <- k$value
 # P264-CC400
 (k <- kendall(cbind(datos$kurtP264,datos$kurtCC400)))
-kurt_kcc[3,4] <- kccRES[1,14] <- k$value
+kurt_kcc[3,4] <- k$value
 
 # Betti0-Slope
 # All atlases together
 k <- (kendall(cbind(datos$slopAAL,datos$slopCC200,datos$slopP264,datos$slopCC400)))
-kccRES[1,15] <- k$value
-
 # Pairwise
 slop_kcc <- array(0,dim=c(4,4))
 # AAL-CC200
 (k <- kendall(cbind(datos$slopAAL,datos$slopCC200)))
-slop_kcc[1,2] <- kccRES[1,16] <- k$value
+slop_kcc[1,2] <- k$value
 # AAL-P264
 (k <- kendall(cbind(datos$slopAAL,datos$slopP264)))
-slop_kcc[1,3] <- kccRES[1,17] <- k$value
+slop_kcc[1,3] <- k$value
 # AAL-CC400
 (k <- kendall(cbind(datos$slopAAL,datos$slopCC400)))
-slop_kcc[1,4] <- kccRES[1,18] <- k$value
+slop_kcc[1,4] <- k$value
 # CC200-P264
 (k <- kendall(cbind(datos$slopCC200,datos$slopP264)))
-slop_kcc[2,3] <- kccRES[1,19] <- k$value
+slop_kcc[2,3] <- k$value
 # CC200-CC400
 (k <- kendall(cbind(datos$slopCC200,datos$slopCC400)))
-slop_kcc[2,4] <- kccRES[1,20] <- k$value
+slop_kcc[2,4] <- k$value
 # P264-CC400
 (k <- kendall(cbind(datos$slopP264,datos$slopCC400)))
-slop_kcc[3,4] <- kccRES[1,21] <- k$value
+slop_kcc[3,4] <- k$value
 
 #------------------------------------------------------------------------------------------------------------------
 # Plot results
@@ -193,102 +180,24 @@ if(!dir.exists(res_dir)) dir.create(res_dir)
 #svg(file.path(res_dir,"KCC.svg"),5,5)
 par(mfrow=c(1,3))
 # Area
-colnames(area_kcc) <- c("AAL","CC200","P264","CC400")
-rownames(area_kcc) <- c("AAL","CC200","P264","CC400")
+colnames(area_kcc) <- rownames(area_kcc) <- atlas
 colorcito <- c(heat.colors(50),rev(heat.colors(50)))
 corrplot(area_kcc,method = "square", type = "upper", diag=F, mar=c(2,0,2,0),
          col = colorcito, tl.col = "black", addCoef.col = "black",
          tl.srt = 45, is.corr = F, cl.lim = c(0,1), cl.ratio = .3)
 # Kurtosis
-colnames(kurt_kcc) <- c("AAL","CC200","P264","CC400")
-rownames(kurt_kcc) <- c("AAL","CC200","P264","CC400")
+colnames(kurt_kcc) <- rownames(kurt_kcc) <- atlas
 corrplot(kurt_kcc,method = "square", type = "upper", diag=F, mar=c(2,0,2,0),
          col = colorcito, tl.col = "black", addCoef.col = "black",
          tl.srt = 45, is.corr = F, cl.lim = c(0,1), cl.ratio = .3)
 # Slope
-colnames(slop_kcc) <- c("AAL","CC200","P264","CC400")
-rownames(slop_kcc) <- c("AAL","CC200","P264","CC400")
+colnames(slop_kcc) <- rownames(slop_kcc) <- atlas
 corrplot(slop_kcc,method = "square", type = "upper", diag=F, mar=c(2,0,2,0),
          col = colorcito, tl.col = "black", addCoef.col = "black",
          tl.srt = 45, is.corr = F, cl.lim = c(0,1), cl.ratio = .3)
 # Save plot
 #dev.off()
 par(op)
-
-#------------------------------------------------------------------------------------------------------------------
-# Kendall Concordance Coefficient (KCC) along parcellations
-
-# Load 'parallel' library
-library(parallel)
-set.seed(18900217)
-
-# Set variables of interest
-datPERM <- datos[,match(paste0(rep(c("area","kurt","slop"),4),rep(atlas_labs,each=3)),names(datos))]
-# Set agreement combinations by columns names
-collist <- vector("list",21)
-# Column numbers for AUC
-collist[[1]] <- c(1,4,7,10)
-collist[[2]] <- c(1,4)
-collist[[3]] <- c(1,7)
-collist[[4]] <- c(1,10)
-collist[[5]] <- c(4,7)
-collist[[6]] <- c(4,10)
-collist[[7]] <- c(7,10)
-# Column numbers for Kurtosis and Slope
-for(ii in 8:21) collist[[ii]] <- collist[[ii-7]]+1
-
-# Set cluster
-cl <- makeCluster(detectCores())
-clusterExport(cl=cl,
-              varlist=c("datPERM", "kendall", "collist"),
-              envir=environment())
-kccRES[2:(nperm+1),] <- t(parSapply(cl,1:nperm, function(x){
-  # Permute variables
-  datPERM <- apply(datPERM, 2, sample)
-  # Calculate KCC
-  sapply(1:21, function(x) kendall(datPERM[,collist[[x]]])$value)
-}))
-stopCluster(cl)
-
-
-####################################################################################################################
-# Null models
-####################################################################################################################
-
-# Get results from permutated data in 'perm_dir'
-perm_dir <- file.path(getwd(),"02-TDA","PERM")
-
-# Plot Betti0 curves along permutated data
-#svg(file.path(res_dir,"all_permRips.svg"),7,5)
-#pdf(file.path(res_dir,"all_permRips.pdf"),7,5)
-par(mfrow = c(2,2))
-for(aa in 1:length(atlas_labs)){
-  
-  # Read observed data
-  rips_smp <- read.csv(paste0(perm_dir,"/Rips_",atlas_labs[aa],"_AvgCI.csv"), header = F, row.names = 1)
-  rips_smp$N <- 0
-  plot(unlist(rips_smp[1,]),1:ncol(rips_smp), type = "l", las = 1, axes = F,
-       xlim = c(0,0.6), xlab = "Filtration value", ylab = "B0", main = atlas_labs[aa])
-  axis(side = 1, lwd = 2)
-  axis(side = 2, lwd = 2, las = 1)
-  # Add CI
-  lines(unlist(rips_smp[2,]),1:ncol(rips_smp), lty = 1)
-  lines(unlist(rips_smp[3,]),1:ncol(rips_smp), lty = 1)
-  
-  # Unconstrain null model
-  lines(unlist(rips_smp[4,]), 1:ncol(rips_smp), col = "darkolivegreen")
-  lines(unlist(rips_smp[5,]), 1:ncol(rips_smp), col = "darkolivegreen", lty = 1)
-  lines(unlist(rips_smp[6,]), 1:ncol(rips_smp), col = "darkolivegreen", lty = 1)
-  
-  # Constrain null model
-  lines(unlist(rips_smp[7,]), 1:ncol(rips_smp), col = "darkgoldenrod")
-  lines(unlist(rips_smp[8,]), 1:ncol(rips_smp), col = "darkgoldenrod", lty = 1)
-  lines(unlist(rips_smp[9,]), 1:ncol(rips_smp), col = "darkgoldenrod", lty = 1)
-  
-  # Add one legend
-  if(aa == 4) legend("topright", legend = c("Obs.","Null-C","Null-U"), col = c("black", "darkgoldenrod", "darkolivegreen"), lty = 1, lwd = 2)
-}
-#dev.off()
 
 
 ####################################################################################################################
@@ -299,52 +208,73 @@ for(aa in 1:length(atlas_labs)){
 #------------------------------------------------------------------------------------------------------------------
 
 # Create empty object to save every result
-res <- array(0, dim=c(12,6))
-rownames(res) <- c("AAL-OR","AAL-z","AAL-p",
-                   "CC200-OR","CC200-z","CC200-p",
-                   "P264-OR","P264-z","P264-p",
-                   "CC400-OR","CC400-z","CC400-p")
+res <- array(0, dim=c(20,6))
+rownames(res) <- c("AAL-logOR","AAL-logORer","AAL-OR","AAL-z","AAL-p",
+                   "CC200-logOR","CC200-logORer","CC200-OR","CC200-z","CC200-p",
+                   "P264-logOR","P264-logORer","P264-OR","P264-z","P264-p",
+                   "CC400-logOR","CC400-logORer","CC400-OR","CC400-z","CC400-p")
 colnames(res) <- c("area","kurt","slop","sex","age","avgFD")
 
 # AAL
 fit <- summary(glm(grupo ~ scale(areaAAL) + scale(kurtAAL) + scale(slopAAL) + Sex + scale(Age) + scale(AvgRelRMS),
                    data = datos, family=binomial("logit")))
-res[1,] <- exp(fit$coefficients[2:7,1])
-res[2,] <- fit$coefficients[2:7,3]
-res[3,] <- fit$coefficients[2:7,4]
+res[1,] <- fit$coefficients[2:7,1]
+res[2,] <- fit$coefficients[2:7,2]
+res[3,] <- exp(fit$coefficients[2:7,1])
+res[4,] <- fit$coefficients[2:7,3]
+res[5,] <- fit$coefficients[2:7,4]
 # CC200
 fit <- summary(glm(grupo ~ scale(areaCC200) + scale(kurtCC200) + scale(slopCC200) + Sex + scale(Age) + scale(AvgRelRMS),
                    data = datos, family=binomial("logit")))
-res[4,] <- exp(fit$coefficients[2:7,1])
-res[5,] <- fit$coefficients[2:7,3]
-res[6,] <- fit$coefficients[2:7,4]
+res[6,] <- fit$coefficients[2:7,1]
+res[7,] <- fit$coefficients[2:7,2]
+res[8,] <- exp(fit$coefficients[2:7,1])
+res[9,] <- fit$coefficients[2:7,3]
+res[10,] <- fit$coefficients[2:7,4]
 # P264
 fit <- summary(glm(grupo ~ scale(areaP264) + scale(kurtP264) + scale(slopP264) + Sex + scale(Age) + scale(AvgRelRMS),
                    data = datos, family=binomial("logit")))
-res[7,] <- exp(fit$coefficients[2:7,1])
-res[8,] <- fit$coefficients[2:7,3]
-res[9,] <- fit$coefficients[2:7,4]
+res[11,] <- fit$coefficients[2:7,1]
+res[12,] <- fit$coefficients[2:7,2]
+res[13,] <- exp(fit$coefficients[2:7,1])
+res[14,] <- fit$coefficients[2:7,3]
+res[15,] <- fit$coefficients[2:7,4]
+
 # CC400
 fit <- summary(glm(grupo ~ scale(areaCC400) + scale(kurtCC400) + scale(slopCC400) + Sex + scale(Age) + scale(AvgRelRMS),
                    data = datos, family=binomial("logit")))
-res[10,] <- exp(fit$coefficients[2:7,1])
-res[11,] <- fit$coefficients[2:7,3]
-res[12,] <- fit$coefficients[2:7,4]
+res[16,] <- fit$coefficients[2:7,1]
+res[17,] <- fit$coefficients[2:7,2]
+res[18,] <- exp(fit$coefficients[2:7,1])
+res[19,] <- fit$coefficients[2:7,3]
+res[20,] <- fit$coefficients[2:7,4]
 
 # Results
 signif(res,3)
 
 # Print results
 atlas <- c("AAL","CC200","P264","CC400")
+perm_dir <- file.path(getwd(),"02-TDA","PERM")
 #pdf(file.path(res_dir,"grp_all_rips.pdf"),7,5)
 #svg(file.path(res_dir,"grp_all_rips.svg"),7,5)
 par(mfrow = c(2,2))
-
-for(ii in 1:length(atlas)){
+for(aa in 1:length(atlas)){
   
-  # Filepath
-  filename <- file.path(getwd(),"02-TDA",paste0("ADHD200_NYU_ppNIHPD_Rips_",atlas[ii],".csv"))
+  # Add Null model first
+  rips <- read.csv(paste0(perm_dir,"/Rips_",atlas[aa],"_AvgCI.csv"), header = F, row.names = 1)
+  rips$Y <- 0
+  # (Empty) plot
+  y <- 1:ncol(rips); x <- y/length(y)
+  plot(x,y, type = "n", xlim = c(0,0.6), las = 1, frame.plot = F, axes = F,
+       ylab = "Betti 0", xlab = "Filtration Value", main = atlas[aa])
+  axis(side = 1, lwd = 2)
+  axis(side = 2, lwd = 2, las = 1)
+  # Average + CI
+  polygon(c(unlist(rips[5,]),rev(unlist(rips[6,]))),c(y,rev(y)),col = "gray25", border = FALSE)
+  lines(unlist(rips[4,]),y, col = "gray25", lwd = 1)
   
+  # Observed data
+  filename <- file.path(getwd(),"02-TDA",paste0("ADHD200_NYU_ppNIHPD_Rips_",atlas[aa],".csv"))
   # Read Rips filtration for each participant
   rips <- read.csv(filename)
   # Match IDs and rest scan
@@ -353,26 +283,11 @@ for(ii in 1:length(atlas)){
   # Get group averages
   rips$Y <- rep(0,nrow(rips)) # Add distance zero
   ripsAVG <- describeBy(rips, datos$grupo, mat = T)
-  # (Empty) plot
-  y <- 1:ncol(rips); x <- y/length(y)
-  plot(x,y, type = "n", xlim = c(0,0.6), las = 1, frame.plot = F,
-       ylab = "Betti 0", xlab = "Filtration Value", main = atlas[ii])
-  axis(side = 1, lwd = 2)
-  axis(side = 2, lwd = 2, las = 1)
   # Draw c.i. light lines
   colorcito <- c("blue", "red")
   # Draw group means
   lines(ripsAVG$mean[which(ripsAVG$group1=="ADHD")], y, col="red", lwd=1.5)
   lines(ripsAVG$mean[which(ripsAVG$group1=="TDC")], y, col="blue", lwd=1.5)
-  # Bootstrap CI
-  bootCI <- sapply(1:1000, function(x) {
-    boot_idx <- sample(1:ncol(datos), replace = T)
-    describeBy(rips[boot_idx,], datos$grupo[boot_idx], mat = T)$mean
-  })
-  
-  apply(bootCI,2,quantile,0.025)
-  apply(bootCI,2,quantile,0.975)
-  
   # ADHD
   mADHD <- ripsAVG$mean[which(ripsAVG$group1=="ADHD")]
   ciADHD <- ripsAVG$se[which(ripsAVG$group1=="ADHD")]*1.96
@@ -391,49 +306,43 @@ for(ii in 1:length(atlas)){
   #legend("bottomleft", legend = c("ADHD","TDC"), col = c("red", "blue"), lty=1, cex=0.8)
   # Add dotted rectangle
   #rect(xleft = 0.3, xright = 0.4, ybottom = 9, ytop = 41, lty = 2)
-
 }
-  
 #dev.off()
 par(op)
 
-# Add gruped-boxplots
+# Add forest plots
 # Load 'ggplot2' package
 if(!is.element("ggplot2",row.names(installed.packages()))){
   install.packages("ggplot2")
 }
 library(ggplot2)
-theme_set(theme_classic())
-g1 <- ggplot(datos, aes(x=grupo, y=scale(areaAAL), fill=grupo, colour=grupo))+
-  geom_boxplot(alpha = .5, width = .2, notch=TRUE)+
-  scale_colour_manual(values=c("blue", "red"))+
-  scale_fill_manual(values=c("blue", "red"))+
-  ylab("AREA (z)")
-g2 <- ggplot(datos, aes(x=grupo, y=scale(areaCC200), fill=grupo, colour=grupo))+
-  geom_boxplot(alpha = .5, width = .2, notch=TRUE)+
-  scale_colour_manual(values=c("blue", "red"))+
-  scale_fill_manual(values=c("blue", "red"))+
-  ylab("AREA (z)")
-g3 <- ggplot(datos, aes(x=grupo, y=scale(areaP264), fill=grupo, colour=grupo))+
-  geom_boxplot(alpha = .5, width = .2, notch=TRUE)+
-  scale_colour_manual(values=c("blue", "red"))+
-  scale_fill_manual(values=c("blue", "red"))+
-  ylab("AREA (z)")
-g4 <- ggplot(datos, aes(x=grupo, y=scale(areaCC400), fill=grupo, colour=grupo))+
-  geom_boxplot(alpha = .5, width = .2, notch=TRUE)+
-  scale_colour_manual(values=c("blue", "red"))+
-  scale_fill_manual(values=c("blue", "red"))+
-  ylab("AREA (z)")
-# Combine plots
+gglist <- vector("list",length(atlas))
+for(gg in 1:length(gglist)){
+  # Generate odds ratio data.frame
+  ORdf <- data.frame(OR = res[3+5*(gg-1),1:3],
+                     lowCI = exp(res[1+5*(gg-1),1:3]-1.96*res[2+5*(gg-1),1:3]),
+                     upCI = exp(res[1+5*(gg-1),1:3]+1.96*res[2+5*(gg-1),1:3]),
+                     var = c("A","K","S"))
+  # Genearte plot
+  gglist[[gg]] <- ggplot(ORdf, aes(x = OR, y = var)) +
+    geom_vline(aes(xintercept = 1), size = .25, linetype = "dashed") +
+    geom_errorbarh(aes(xmax = upCI, xmin = lowCI), size = .5, height = 
+                     .2, color = "gray50") +
+    geom_point(size = 2, color = "red", shape = 19) +
+    scale_y_discrete(limits = rev(unique(sort(ORdf$var))), position = "right") +
+    scale_x_continuous(position = "top") +
+    theme_bw(base_rect_size = 0.1) + ylab(atlas[gg])
+}
+# Arrange plots
 # Load 'gridExtra' package
 if(!is.element("gridExtra",rownames(installed.packages()))){
   install.packages("gridExtra")
 }
 library(gridExtra)
-g5 <- grid.arrange(g1, g2, g3, g4, nrow = 2, ncol=2)
+g5 <- grid.arrange(grobs=gglist, nrow = 2, ncol=2)
 # Save plot
-outfile <- file.path(res_dir,"grp_all_box.svg")
-#ggsave(outfile, plot = g5, device = "svg")
+outfile <- file.path(res_dir,"grp_all_forest.svg")
+#ggsave(outfile, plot = g5, device = "svg", width = 3, height = 3)
 
 # Compute edge-wise proportion test
 if(file.exists(file.path(getwd(),"03-Inference","CMX_AAL_3D.rds"))){
@@ -477,8 +386,12 @@ for(ii in 1:cmx_dim[1]){
 aal <- read.table(file.path(getwd(),"01-Preprocessing","atlas","AAL","ROI_MNI_V4.txt"))
 colnames(res) <- aal$V3; rownames(res) <- aal$V3
 # Use jet pallette
-par(op)
+# Load 'matlab' package
+if(!is.element("matlab",row.names(installed.packages()))){
+  install.packages("matlab")
+}
 library(matlab)
+par(op)
 corrplot(res, col=rev(jet.colors(64)),is.corr = F, method = "square", mar=c(3,1,1,1)+0.1,
          cl.cex = 0.7, cl.lim = c(-0.3,0.3), tl.cex = 0.5, tl.col = "black")
 # Only significant results
@@ -489,6 +402,10 @@ write.table((-1)*res*(resP<0.01), file.path(res_dir,"prop65_sig01_AAL.edge"),
             quote = F, sep = "\t", row.names = F, col.names = F)
 
 # Generate chord diagram
+# Load packages
+if(sum(is.na(match(c("ggraph","igraph","tidyverse","RColorBrewer"),row.names(installed.packages()))))>0){
+  install.packages(c("ggraph","igraph","tidyverse","RColorBrewer"))
+}
 # Libraries
 library(ggraph)
 library(igraph)
@@ -609,11 +526,8 @@ if(length(sig_links)>0){
     }
   }
 }
-# Load 'igraph' package to read .xlsx file
-if(!is.element("igraph",rownames(installed.packages()))){
-  install.packages("igraph")  
-}
-library(igraph)
+
+# Set 'igraph' object
 gOBS <- graph.adjacency(mOBS, mode = "undirected", weighted = T)
 # Permutate (nperm = 10000)
 nperm <- 10000
@@ -772,6 +686,10 @@ circos.text(fac_pos,rep(0,lob_n),
             labels = levels(net_fac),
             facing = "bending.inside", cex=1.2)
 # Add a links between a point and another
+# Load 'scales' package
+if(!is.element("scales",row.names(installed.packages()))){
+  install.packages("scales")
+}
 library(scales)
 # Find significant (NBS corrected) weigths
 sig_tri <- which(res[-(1:lob_n),4]<=0.05)
@@ -1049,7 +967,6 @@ for(ii in sig_diag){
               border = scales::alpha(tp_col,.5),
               h.ratio=0.8)
 }
-
 #dev.off()
 # Clear cicle parameters
 circos.clear()
